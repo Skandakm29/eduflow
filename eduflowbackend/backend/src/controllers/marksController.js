@@ -18,7 +18,8 @@ const addMarks = async (req, res) => {
         await client.query(
           `INSERT INTO marks (class_id, student_id, exam_name, score, max_score, recorded_by)
            VALUES ($1, $2, $3, $4, $5, $6)
-           ON CONFLICT DO NOTHING`,
+           ON CONFLICT (class_id, student_id, exam_name)
+           DO UPDATE SET score = EXCLUDED.score, max_score = EXCLUDED.max_score, recorded_by = EXCLUDED.recorded_by`,
           [classId, record.studentId, examName, record.score, record.maxScore || 100, req.user.id]
         );
       }

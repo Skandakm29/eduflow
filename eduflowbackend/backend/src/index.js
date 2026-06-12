@@ -33,6 +33,7 @@ app.use('/api/classes', require('./routes/classes'));
 app.use('/api/attendance', require('./routes/attendance'));
 app.use('/api/marks', require('./routes/marks'));
 app.use('/api/materials', require('./routes/materials'));
+app.use('/api/quizzes', require('./routes/quizzes'));
 
 // Health check — useful for deployment platforms (Render, Railway)
 app.get('/health', (req, res) => {

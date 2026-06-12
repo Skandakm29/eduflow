@@ -62,7 +62,8 @@ CREATE TABLE IF NOT EXISTS marks (
   score DECIMAL(5,2),
   max_score DECIMAL(5,2) DEFAULT 100,
   recorded_by INTEGER REFERENCES users(id),
-  recorded_at TIMESTAMP DEFAULT NOW()
+  recorded_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(class_id, student_id, exam_name)
 );
 
 -- AI-generated quizzes

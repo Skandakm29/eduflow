@@ -40,6 +40,13 @@ const uploadMaterial = async (req, res) => {
     res.status(201).json({ message: 'Material uploaded and summarized.', material: result.rows[0] });
   } catch (err) {
     console.error('Upload error:', err);
+    if (req.file && fs.existsSync(req.file.path)) {
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (cleanupErr) {
+        console.error('Failed to delete file on processing failure:', cleanupErr);
+      }
+    }
     res.status(500).json({ error: 'Failed to process material: ' + err.message });
   }
 };
@@ -53,8 +60,9 @@ const generateQuiz = async (req, res) => {
     const truncatedText = matResult.rows[0].raw_text.slice(0, 6000);
     const quizPrompt = `Generate ${numQuestions} multiple choice questions from this material.\n\nReturn ONLY a valid JSON array, no other text:\n[\n  {\n    "question": "question text",\n    "options": ["A. opt1", "B. opt2", "C. opt3", "D. opt4"],\n    "answer": "A",\n    "explanation": "why this is correct"\n  }\n]\n\nMaterial:\n${truncatedText}`;
     const rawResponse = await callClaude(quizPrompt);
-    const cleanJson = rawResponse.replace(/```json|```/g, '').trim();
-    const questions = JSON.parse(cleanJson);
+    const jsonMatch = rawResponse.match(/\[\s*\{[\s\S]*\}\s*\]/);
+    if (!jsonMatch) throw new Error("Could not find a valid JSON array in model response");
+    const questions = JSON.parse(jsonMatch[0]);
     const quizResult = await pool.query(
       `INSERT INTO quizzes (material_id, title, questions) VALUES ($1, $2, $3) RETURNING *`,
       [id, `Quiz: ${matResult.rows[0].title}`, JSON.stringify(questions)]
